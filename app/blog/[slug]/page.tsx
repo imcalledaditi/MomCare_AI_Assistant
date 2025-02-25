@@ -72,33 +72,33 @@ export default async function BlogPost({
               rehypePlugins={[rehypeRaw]}
               components={{
                 h1: ({ node, ...props }) => (
-                  <h1 className="text-4xl font-bold my-4" {...props} />
+                  <h1 className="text-4xl font-bold my-4 dark:text-gray-200" {...props} />
                 ),
                 h2: ({ node, ...props }) => (
-                  <h2 className="text-2xl font-bold my-3" {...props} />
+                  <h2 className="text-2xl font-bold my-3 dark:text-gray-200" {...props} />
                 ),
                 h3: ({ node, ...props }) => (
-                  <h3 className="text-xl font-bold my-3" {...props} />
+                  <h3 className="text-xl font-bold my-3 dark:text-gray-200" {...props} />
                 ),
                 p: ({ node, ...props }) => (
-                  <p className="my-4 leading-relaxed" {...props} />
+                  <p className="my-4 leading-relaxed text-gray-800 dark:text-gray-200" {...props} />
                 ),
                 a: ({ node, ...props }) => (
                   <a className="text-blue-600 underline hover:text-blue-800" {...props} />
                 ),
                 ul: ({ node, ...props }) => (
-                  <ul className="list-disc ml-6 my-2" {...props} />
+                  <ul className="list-disc ml-6 my-2 dark:text-gray-200" {...props} />
                 ),
                 ol: ({ node, ...props }) => (
-                  <ol className="list-decimal ml-6 my-2" {...props} />
+                  <ol className="list-decimal ml-6 my-2 dark:text-gray-200" {...props} />
                 ),
                 table: ({ node, ...props }) => (
                   <div className="overflow-x-auto my-4">
-                    <table className="min-w-full table-auto border-collapse" {...props} />
+                    <table className="min-w-full table-auto border-collapse dark:text-gray-200" {...props} />
                   </div>
                 ),
                 th: ({ node, ...props }) => (
-                  <th className="border p-2 bg-gray-200" {...props} />
+                  <th className="border p-2 bg-gray-200 dark:bg-transparent" {...props} />
                 ),
                 td: ({ node, ...props }) => (
                   <td className="border p-2" {...props} />

@@ -23,16 +23,25 @@ export default function Resources() {
 
   useEffect(() => {
     const fetchBlogs = async () => {
-      try {
-        const response = await databases.listDocuments(
-          BLOG_DATABASE_ID,
-          BLOG_COLLECTION_ID
-        );
-        setBlogs(response.documents);
-      } catch (error) {
-        console.error("Error fetching blogs:", error);
-      } finally {
+      const cacheKey = "blog_resources";
+      const cachedData = localStorage.getItem(cacheKey);
+
+      if (cachedData) {
+        setBlogs(JSON.parse(cachedData));
         setLoading(false);
+      } else {
+        try {
+          const response = await databases.listDocuments(
+            BLOG_DATABASE_ID,
+            BLOG_COLLECTION_ID
+          );
+          setBlogs(response.documents);
+          localStorage.setItem(cacheKey, JSON.stringify(response.documents));
+        } catch (error) {
+          console.error("Error fetching blogs:", error);
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
@@ -95,10 +104,10 @@ export default function Resources() {
                     </ReactMarkdown>
                   </div>
                   <Link href={`/blog/${blog.slug}`} legacyBehavior>
-  <a className="inline-block bg-blue-500 hover:bg-blue-600 focus:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow transition-colors duration-200">
-    Read More
-  </a>
-</Link>
+                    <a className="inline-block bg-blue-500 hover:bg-blue-600 focus:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow transition-colors duration-200">
+                      Read More
+                    </a>
+                  </Link>
                 </Card>
               </motion.div>
             ))}
