@@ -1,38 +1,55 @@
+// Language: TSX
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Client, Databases, ID } from "appwrite";
+import ReactMarkdown from "react-markdown";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { getCurrentUser } from "@/lib/appwrite";
 
-// Initialize Appwrite client using environment variables
 const client = new Client()
-  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!) // e.g. https://cloud.appwrite.io/v1
+  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
   .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
 
 const databases = new Databases(client);
 
-// Use provided default IDs if env vars are not set
-const BLOG_DATABASE_ID =
-  process.env.NEXT_PUBLIC_APPWRITE_BLOG_DATABASE_ID;
-const BLOG_COLLECTION_ID =
-  process.env.NEXT_PUBLIC_APPWRITE_BLOG_COLLECTION_ID;
+const BLOG_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_BLOG_DATABASE_ID;
+const BLOG_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_BLOG_COLLECTION_ID;
+
+interface User {
+  name: string;
+  email: string;
+}
 
 export default function NewBlogPost() {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
-  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [preview, setPreview] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const email = localStorage.getItem("userEmail");
-    setCurrentUserEmail(email);
+    const fetchUser = async () => {
+      try {
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+      } catch (err) {
+        console.error("Error fetching current user:", err);
+      }
+    };
+    fetchUser();
   }, []);
 
-  if (currentUserEmail && currentUserEmail !== "adityav1304@gmail.com") {
+  if (!currentUser) {
+    return <div>Loading...</div>;
+  }
+
+  // Authorization check based on email (only allow adityav1304@gmail.com)
+  if (currentUser.email !== "adityav1304@gmail.com") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>You are not authorized to post blogs.</p>
@@ -48,19 +65,19 @@ export default function NewBlogPost() {
         BLOG_COLLECTION_ID,
         ID.unique(),
         {
-          title,       // Must match the schema field exactly
-          slug,        // Must match the schema field exactly
-          content,     // Must match the schema field exactly
-          author: currentUserEmail,
-          createdAt: new Date().toISOString(),
+          title,                       // Must match the schema field exactly
+          slug,                        // Must match the schema field exactly
+          content,                     // Must match the schema field exactly
+          author: currentUser.name,    // Automatically taken from the logged-in user
+          createdAt: new Date().toISOString(), // Current date & time stamp
         }
       );
       toast.success("Blog post created successfully!");
       router.push(`/blog/${slug}`);
     } catch (err: any) {
-      console.error("Error creating blog post:", err);
-      setError("Failed to create blog post.");
-      toast.error("Failed to create blog post.");
+      console.error("Error creating document:", err);
+      setError("Failed to create document.");
+      toast.error("Failed to create document.");
     }
   };
 
@@ -94,7 +111,7 @@ export default function NewBlogPost() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Content
+            Content (supports Markdown formatting, e.g. **bold**)
           </label>
           <textarea
             value={content}
@@ -104,12 +121,27 @@ export default function NewBlogPost() {
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
           />
         </div>
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Post Blog
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            type="button"
+            onClick={() => setPreview(!preview)}
+            className="bg-gray-500 text-white px-4 py-2 rounded"
+          >
+            {preview ? "Hide Preview" : "Show Preview"}
+          </button>
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Post Blog
+          </button>
+        </div>
+        {preview && (
+          <div className="mt-6 p-4 border border-gray-300 rounded">
+            <h2 className="text-xl font-bold mb-2">Markdown Preview:</h2>
+            <ReactMarkdown>{content}</ReactMarkdown>
+          </div>
+        )}
       </form>
       <ToastContainer />
     </div>
