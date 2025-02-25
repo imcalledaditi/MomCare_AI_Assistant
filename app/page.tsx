@@ -25,7 +25,7 @@ export default function Home() {
               Get personalized antenatal care advice, appointment reminders, and 24/7 support
             </p>
             <Button size="lg" asChild className="text-lg">
-              <Link href="/chat">Start Chatting Now</Link>
+              <Link href="/signup">Start Chatting Now</Link>
             </Button>
           </div>
         </div>
