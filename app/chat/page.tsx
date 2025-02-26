@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { ToastContainer, toast } from "react-toastify"
 import Tesseract from "tesseract.js"
+import pdfToText from 'react-pdftotext'
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -41,6 +42,9 @@ export default function Chat() {
   const [loading, setLoading] = useState(false)
   const [userName, setUserName] = useState("")
   const [isAuthChecking, setIsAuthChecking] = useState(true)
+  const [shouldForceScroll, setShouldForceScroll] = useState(false)
+  const [userLocation, setUserLocation] = useState("")
+  const [isLocating, setIsLocating] = useState(false)
 
   const router = useRouter()
 
@@ -54,20 +58,98 @@ export default function Chat() {
     }
   }
 
+  // Modified useEffect for scrolling - always scroll when a bot message is added
   useEffect(() => {
     if (scrollAreaRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = scrollAreaRef.current
       const isAtBottom = scrollTop + clientHeight >= scrollHeight - 20
-      if (isAtBottom) {
-        scrollToBottom()
+      
+      // Always scroll when shouldForceScroll is true or user was already at bottom
+      if (shouldForceScroll || isAtBottom) {
+        // Use setTimeout to ensure scrolling happens after render
+        setTimeout(scrollToBottom, 100)
+      }
+      
+      // Reset the force scroll flag
+      if (shouldForceScroll) {
+        setShouldForceScroll(false)
       }
     }
-  }, [messages])
+  }, [messages, shouldForceScroll])
 
   const handleScroll = () => {
     if (scrollAreaRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = scrollAreaRef.current
       setShowScrollButton(scrollTop + clientHeight < scrollHeight - 20)
+    }
+  }
+
+  // Get user's location and convert coordinates to address using Google Maps Geocoding API
+  const getUserLocation = () => {
+    setIsLocating(true)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+          const { latitude, longitude } = position.coords
+          
+          // Use Google Maps Geocoding API to get address
+          const response = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+          )
+          const data = await response.json()
+          
+          if (data.results && data.results.length > 0) {
+            // Get formatted address from the first result
+            const address = data.results[0].formatted_address
+            setUserLocation(address)
+            toast.success("Location detected for personalized advice", { autoClose: 3000 })
+          } else {
+            console.error("No results found from geocoding")
+            // Don't show warning to user - just log it
+          }
+        } catch (error) {
+          console.error("Error getting location:", error)
+          // Don't show error to user - just log it
+        } finally {
+          setIsLocating(false)
+        }
+      }, (error) => {
+        console.error("Geolocation error:", error)
+        // Don't show error to user - just log it
+        setIsLocating(false)
+      })
+    } else {
+      console.error("Geolocation is not supported by this browser")
+      setIsLocating(false)
+    }
+  }
+
+  // Extract text from PDF using react-pdftotext
+  const extractTextFromPDF = async (url: string) => {
+    try {
+      console.log("Attempting to extract text from PDF:", url);
+      
+      // Fetch the PDF file from URL
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch PDF: ${response.statusText}`);
+      }
+      
+      // Convert response to blob
+      const pdfBlob = await response.blob();
+      
+      // Create a File object that pdfToText can work with
+      const pdfFile = new File([pdfBlob], "document.pdf", { type: "application/pdf" });
+      
+      // Use pdfToText to extract the text
+      const extractedText = await pdfToText(pdfFile);
+      console.log("PDF text extraction successful");
+      
+      return extractedText;
+    } catch (error) {
+      console.error("Error extracting PDF text:", error);
+      toast.error(`Failed to extract text from PDF: ${error instanceof Error ? error.message : "Unknown error"}`);
+      return "";
     }
   }
 
@@ -98,33 +180,69 @@ export default function Chat() {
       setLoading(true)
       try {
         const { documents } = await listMedicalDocuments()
-        // Filter images and extract text using Promise.all
-        const extractionPromises = documents
-          .filter((doc: any) => doc.mimeType.startsWith("image/"))
-          .map(async (doc: any) => {
-            try {
+        
+        if (documents.length === 0) {
+          toast.info("No medical documents found. You can still chat without them.")
+          setLoading(false)
+          return
+        }
+        
+        let processedCount = 0;
+        let failedCount = 0;
+        
+        // Process both images and PDFs
+        const extractionPromises = documents.map(async (doc: any) => {
+          try {
+            // Handle images
+            if (doc.mimeType.startsWith("image/")) {
               const { data } = await Tesseract.recognize(doc.url, "eng", {
-                logger: (m) => console.log(m),
-              })
-              return data.text
-            } catch (error) {
-              console.error(`Error extracting text from ${doc.$id}:`, error)
-              return ""
+                logger: (m) => {
+                  if (m.status === "recognizing text" && m.progress === 1) {
+                    // Document processing complete
+                  }
+                },
+              });
+              processedCount++;
+              return data.text;
+            } 
+            // Handle PDFs
+            else if (doc.mimeType === "application/pdf") {
+              const text = await extractTextFromPDF(doc.url);
+              if (text) processedCount++;
+              else failedCount++;
+              return text;
             }
-          })
-        const texts = await Promise.all(extractionPromises)
-        // Combine extracted texts (you can change the separator if needed)
-        setMedicalDocs(texts.join("\n"))
-        toast.success("Medical document loaded!")
+            return ""; // Skip other file types
+          } catch (error) {
+            failedCount++;
+            console.error(`Error extracting text from ${doc.$id}:`, error);
+            return "";
+          }
+        });
+        
+        const texts = await Promise.all(extractionPromises);
+        // Combine extracted texts
+        const combinedText = texts.filter(text => text.trim() !== "").join("\n\n");
+        setMedicalDocs(combinedText);
+        
+        if (combinedText) {
+          toast.success(`${processedCount} medical document(s) processed successfully!`);
+          if (failedCount > 0) {
+            toast.warning(`${failedCount} document(s) could not be processed.`);
+          }
+        } else {
+          toast.info("No text could be extracted from your documents.");
+        }
       } catch (error) {
-        console.error("Error fetching documents:", error)
-        toast.error("Failed to fetch or extract medical document text.")
+        console.error("Error fetching documents:", error);
+        toast.error("Failed to fetch or extract medical document text.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchAndExtractDocs()
-  }, [isAuthChecking])
+    };
+    
+    fetchAndExtractDocs();
+  }, [isAuthChecking]);
 
   // Show loading state while checking authentication
   if (isAuthChecking) {
@@ -135,11 +253,13 @@ export default function Chat() {
     )
   }
 
-  // Start chat only if required fields are filled (medicalDocs is auto-filled)
+  // Start chat only if required fields are filled (medicalDocs is optional)
   const handleStartChat = (e: React.FormEvent) => {
     e.preventDefault()
-    if (medicalDocs.trim() && userFeeling.trim() && age.trim() && weeksPregnant.trim()) {
+    if (userFeeling.trim() && age.trim() && weeksPregnant.trim()) {
       setShowChat(true)
+      // Automatically try to get location when chat starts
+      getUserLocation()
     } else {
       toast.error("Please fill in all required fields.")
     }
@@ -153,6 +273,7 @@ export default function Chat() {
     setWeeksPregnant("")
     setPreExistingConditions("")
     setSpecificConcerns("")
+    setUserLocation("")
     setMessages([
       {
         id: 1,
@@ -161,6 +282,7 @@ export default function Chat() {
         timestamp: new Date(),
       },
     ])
+  
   }
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -183,8 +305,9 @@ Pre-existing Conditions: ${preExistingConditions}.
 Specific Concerns: ${specificConcerns}.
 Medical Document Text: ${medicalDocs}.
 User Feeling: ${userFeeling}.
+User Location: ${userLocation || "Unknown"}.
 
-You are a pregnancy care assistant. Keep this context in mind and always remember to customise your responses for India.
+You are a pregnancy care assistant. Keep this context in mind and always remember to customise your responses for India. If the user's location is provided, tailor your advice to that specific location when relevant.
 
 User says: ${userMessage.text}
 
@@ -196,7 +319,7 @@ AI:`
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -220,9 +343,17 @@ AI:`
         sender: "bot",
         timestamp: new Date(),
       }
+      
+      // Set the force scroll flag before adding the bot message
+      setShouldForceScroll(true)
+      
       setMessages((prev) => [...prev, botMessage])
     } catch (error: any) {
       console.error("Error calling Gemini API:", error)
+      
+      // Set the force scroll flag before adding the error message
+      setShouldForceScroll(true)
+      
       setMessages((prev) => [
         ...prev,
         {
@@ -326,6 +457,9 @@ AI:`
               />
             </div>
             <Button type="submit">Start Chat</Button>
+            <p className="text-sm text-muted-foreground">
+              *Location detection will be used to provide personalized advice.
+            </p>
           </motion.form>
           <ToastContainer />
         </div>
@@ -346,6 +480,9 @@ AI:`
             >
               Chat with MomCare AI
             </motion.h1>
+            {userLocation && (
+              <p className="text-sm text-muted-foreground">Location: {userLocation}</p>
+            )}
           </div>
           <ScrollArea
             className="flex-1 p-4"
