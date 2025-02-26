@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { ToastContainer, toast } from "react-toastify"
 import Tesseract from "tesseract.js"
 import { motion, AnimatePresence } from "framer-motion"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -39,6 +40,9 @@ export default function Chat() {
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [userName, setUserName] = useState("")
+  const [isAuthChecking, setIsAuthChecking] = useState(true)
+
+  const router = useRouter()
 
   // Ref and state for scrolling
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -67,21 +71,29 @@ export default function Chat() {
     }
   }
 
-  // Get logged-in user's name
+  // Check authentication and get user's name
   useEffect(() => {
-    const fetchUserName = async () => {
+    const checkAuthAndFetchUser = async () => {
+      setIsAuthChecking(true)
       try {
         const user = await account.get()
         setUserName(user.name)
       } catch (error) {
-        console.error("Failed to fetch user:", error)
+        console.error("Authentication failed:", error)
+        toast.error("Please login to access this page")
+        router.push('/login')
+        return
+      } finally {
+        setIsAuthChecking(false)
       }
     }
-    fetchUserName()
-  }, [])
+    checkAuthAndFetchUser()
+  }, [router])
 
   // Automatically fetch and extract text from all medical documents
   useEffect(() => {
+    if (isAuthChecking) return // Don't fetch docs if still checking auth
+
     const fetchAndExtractDocs = async () => {
       setLoading(true)
       try {
@@ -112,7 +124,16 @@ export default function Chat() {
       }
     }
     fetchAndExtractDocs()
-  }, [])
+  }, [isAuthChecking])
+
+  // Show loading state while checking authentication
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg font-medium">Checking authentication...</p>
+      </div>
+    )
+  }
 
   // Start chat only if required fields are filled (medicalDocs is auto-filled)
   const handleStartChat = (e: React.FormEvent) => {

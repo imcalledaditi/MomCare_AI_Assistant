@@ -1,4 +1,3 @@
-// Language: TSX
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,6 +6,8 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { getCurrentUser } from "@/lib/appwrite";
 
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
@@ -20,33 +21,49 @@ export default function Resources() {
   const [blogs, setBlogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchBlogs = async () => {
+    const checkAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
+          router.push('/login');
+          return;
+        }
+        setUser(currentUser);
+        fetchBlogs();
+      } catch (error) {
+        console.error("Authentication error:", error);
+        router.push('/login');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  const fetchBlogs = async () => {
+    try {
       const cacheKey = "blog_resources";
       const cachedData = localStorage.getItem(cacheKey);
 
       if (cachedData) {
         setBlogs(JSON.parse(cachedData));
-        setLoading(false);
       } else {
-        try {
-          const response = await databases.listDocuments(
-            BLOG_DATABASE_ID,
-            BLOG_COLLECTION_ID
-          );
-          setBlogs(response.documents);
-          localStorage.setItem(cacheKey, JSON.stringify(response.documents));
-        } catch (error) {
-          console.error("Error fetching blogs:", error);
-        } finally {
-          setLoading(false);
-        }
+        const response = await databases.listDocuments(
+          BLOG_DATABASE_ID,
+          BLOG_COLLECTION_ID
+        );
+        setBlogs(response.documents);
+        localStorage.setItem(cacheKey, JSON.stringify(response.documents));
       }
-    };
-
-    fetchBlogs();
-  }, []);
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredBlogs = blogs.filter((blog) =>
     blog.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -64,8 +81,16 @@ export default function Resources() {
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, ease: "linear", duration: 1 }}
         />
-        <p className="mt-4 text-lg font-medium text-gray-700">Loading blogs...</p>
+        <p className="mt-4 text-lg font-medium text-gray-700">Loading...</p>
       </motion.div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Please login to access resources.</p>
+      </div>
     );
   }
 

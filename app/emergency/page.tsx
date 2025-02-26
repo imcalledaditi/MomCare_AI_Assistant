@@ -61,12 +61,11 @@ export default function Emergency() {
         const service = new window.google.maps.places.PlacesService(
           document.createElement("div")
         );
-        // Define the request with rankBy DISTANCE and a keyword filter for maternity services.
         const request = {
           location: location,
           rankBy: window.google.maps.places.RankBy.DISTANCE,
           type: "hospital",
-          keyword: "maternity" // Only return hospitals that can handle pregnancy cases.
+          keyword: "nearby reputed hospitals with emergency provision" // Only return hospitals that can handle pregnancy cases.
         };
 
         // Perform a nearby search.
@@ -157,7 +156,7 @@ export default function Emergency() {
           {/* Nearest Hospitals Card */}
           <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-4">
-              Nearest Hospitals (with Maternity Services)
+              Nearest Hospitals
             </h2>
             <div className="space-y-4">
               {locationError && (

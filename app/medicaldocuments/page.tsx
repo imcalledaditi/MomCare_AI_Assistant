@@ -4,7 +4,8 @@ import { useState, useEffect, ChangeEvent } from "react";
 import { 
   listMedicalDocuments,
   uploadMedicalDocument,
-  deleteMedicalDocument 
+  deleteMedicalDocument,
+  getCurrentUser
 } from "@/lib/appwrite";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,12 +15,37 @@ import Image from "next/image";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function MedicalDocuments() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
+          router.push('/login');
+          return;
+        }
+        setUser(currentUser);
+        fetchDocuments();
+      } catch (error) {
+        console.error("Authentication error:", error);
+        router.push('/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
 
   const fetchDocuments = async () => {
     try {
@@ -30,10 +56,6 @@ export default function MedicalDocuments() {
       console.error("List documents error:", error);
     }
   };
-
-  useEffect(() => {
-    fetchDocuments();
-  }, []);
 
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
@@ -68,6 +90,22 @@ export default function MedicalDocuments() {
       console.error("Delete document error:", error);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Please login to access your medical documents.</p>
+      </div>
+    );
+  }
 
   return (
     <motion.div 
@@ -172,4 +210,4 @@ export default function MedicalDocuments() {
       )}
     </motion.div>
   );
-}   
+}

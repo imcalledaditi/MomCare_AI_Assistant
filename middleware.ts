@@ -1,25 +1,43 @@
 // middleware.ts
-import { NextResponse } from "next/server";
-import { NextRequest } from "next/server";
-
-const protectedPaths = ["/dashboard", "/appointments", "/chat"];
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const isProtectedPath = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
+  // Define protected routes
+  const protectedRoutes = [
+    '/medicaldocuments',
+    '/emergency',
+    '/resources',
+    '/appointments',
+    '/chat',
+    '/dashboard',
+  ];
+
+  // Check if the current path is a protected route
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    request.nextUrl.pathname.startsWith(route)
   );
 
-  const isAuthenticated = request.cookies.get("auth_session");
+  // If it's a protected route
+  if (isProtectedRoute) {
+    // Check for the Appwrite session cookie
+    const hasSession = request.cookies.get('a_session')?.value;
 
-  if (isProtectedPath && !isAuthenticated) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
+    // If no session cookie is found, redirect to login
+    if (!hasSession) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
+  // Continue with the request if authenticated or not a protected route
   return NextResponse.next();
 }
 
+// Apply middleware to all routes except public ones
 export const config = {
-  matcher: ["/dashboard/:path*", "/appointments/:path*", "/chat/:path*"],
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|public|login|signup).*)',
+  ],
 };
