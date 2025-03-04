@@ -17,12 +17,19 @@ export default function Signup() {
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value
+    setPhone(input)
+  }
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    const fullPhoneNumber = `+91${phone}`
+
     // Validate phone number: must start with '+' and have up to 15 digits
     const phoneRegex = /^\+[1-9]\d{1,14}$/
-    if (!phoneRegex.test(phone)) {
+    if (!phoneRegex.test(fullPhoneNumber)) {
       toast.error("Invalid phone number. It must start with '+' and have up to 15 digits, e.g., +14155552671.")
       return
     }
@@ -34,11 +41,11 @@ export default function Signup() {
     setLoading(true)
 
     try {
-      await createAccount(email, password, fullName, phone)
+      await createAccount(email, password, fullName, fullPhoneNumber)
       toast.success('Account created successfully!')
       router.push('/dashboard')
-    router.refresh() // Ensures fresh data loading
-    window.location.href = '/dashboard' // Forces a full page reload
+      router.refresh() // Ensures fresh data loading
+      window.location.href = '/dashboard' // Forces a full page reload
     } catch (error) {
       toast.error('Failed to create account. Please try again.')
     } finally {
@@ -108,15 +115,20 @@ export default function Signup() {
               <label htmlFor="phone" className="block text-sm font-medium">
                 Phone Number
               </label>
-              <Input
-                id="phone"
-                type="text"
-                required
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="mt-1"
-                placeholder="Enter phone number e.g., +14155552671"
-              />
+              <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+      <span className="flex items-center justify-center px-3 text-sm text-gray-600 bg-gray-200 border-r border-gray-300 h-10">
+        +91
+      </span>
+      <Input
+        id="phone"
+        type="text"
+        required
+        value={phone}
+        onChange={handlePhoneChange}
+        className="flex-1 h-10 px-3 text-base border-none focus:ring-0 focus:outline-none"
+        placeholder="Enter phone number"
+      />
+    </div>
             </div>
           </div>
 

@@ -43,27 +43,39 @@ export default function Resources() {
     checkAuth();
   }, [router]);
 
+  // Function to fetch blogs directly from Appwrite
   const fetchBlogs = async () => {
     try {
-      const cacheKey = "blog_resources";
-      const cachedData = localStorage.getItem(cacheKey);
-
-      if (cachedData) {
-        setBlogs(JSON.parse(cachedData));
-      } else {
-        const response = await databases.listDocuments(
-          BLOG_DATABASE_ID,
-          BLOG_COLLECTION_ID
-        );
-        setBlogs(response.documents);
-        localStorage.setItem(cacheKey, JSON.stringify(response.documents));
-      }
+      const response = await databases.listDocuments(
+        BLOG_DATABASE_ID,
+        BLOG_COLLECTION_ID
+      );
+      console.log("Fetched blogs from Appwrite:", response.documents);
+      setBlogs(response.documents);
     } catch (error) {
       console.error("Error fetching blogs:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Realtime subscription to listen for changes in the blogs collection
+  useEffect(() => {
+    // The subscribe method returns an unsubscribe function
+    const unsubscribe = client.subscribe(
+      `collections.${BLOG_COLLECTION_ID}.documents`,
+      (response) => {
+        console.log("Realtime update received:", response);
+        // Fetch latest data when a change is detected
+        fetchBlogs();
+      }
+    );
+
+    // Cleanup: call the unsubscribe function when the component unmounts
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const filteredBlogs = blogs.filter((blog) =>
     blog.title.toLowerCase().includes(searchQuery.toLowerCase())

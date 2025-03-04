@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Link from "next/link";
 
 interface Profile {
   name: string;
@@ -87,8 +88,27 @@ export default function Dashboard() {
   }
 
   if (!profile) {
-    return <p className="text-center mt-8">No profile found.</p>;
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+          <p className="text-gray-600 mb-6">Wrong Credentials. Please check your details and try again.</p>
+          <Link href="/login">
+            <Button className="w-full py-2 mb-4 bg-blue-600 hover:bg-blue-500 transition duration-200">
+              Login
+            </Button>
+          </Link>
+          <p className="text-gray-600">
+            New here?{" "}
+            <Link href="/signup" className="text-blue-500 font-semibold hover:underline">
+              Register here
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
   }
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
