@@ -113,6 +113,9 @@ export function AnimatedBlogPost({ post }: AnimatedBlogPostProps) {
                         {...props}
                       />
                     ),
+                    img: ({ node, ...props }) => (
+                      <img className="w-full h-auto rounded-sm" {...props} />
+                    ),
                   }}
                 >
                   {post.content}

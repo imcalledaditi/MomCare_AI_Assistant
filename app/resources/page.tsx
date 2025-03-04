@@ -136,9 +136,14 @@ export default function Resources() {
                     By {blog.author} • {new Date(blog.createdAt).toLocaleDateString()}
                   </div>
                   <div className="prose mb-4">
-                    <ReactMarkdown>
-                      {blog.content.substring(0, 100) + '...'}
-                    </ReactMarkdown>
+                  <ReactMarkdown
+  components={{
+    img: () => null, // Prevent rendering images
+  }}
+>
+  {blog.content.substring(0, 200) + '...'}
+</ReactMarkdown>
+
                   </div>
                   <Link href={`/blog/${blog.slug}`} legacyBehavior>
                     <a className="inline-block bg-blue-500 hover:bg-blue-600 focus:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow transition-colors duration-200">

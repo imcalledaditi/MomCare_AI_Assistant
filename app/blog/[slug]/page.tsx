@@ -20,13 +20,6 @@ export async function generateStaticParams() {
       slug: doc.slug,
     }));
 
-    // Define additional expected slugs if needed.
-    const expectedSlugs = ["there", "another"];
-    expectedSlugs.forEach((slug) => {
-      if (!paths.some((p) => p.slug === slug)) {
-        paths.push({ slug });
-      }
-    });
     return paths;
   } catch (error) {
     console.error("Error fetching blog posts for static paths:", error);
