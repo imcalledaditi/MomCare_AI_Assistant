@@ -26,7 +26,6 @@ export async function generateStaticParams() {
     return [];
   }
 }
-export const dynamicParams = true;
 export const revalidate = 5; // Revalidate every 5 sec
 export default async function BlogPost({
   params,
