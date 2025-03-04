@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
-import { login } from '@/lib/appwrite'
+import { login, getCurrentUser } from '@/lib/appwrite'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -15,25 +15,33 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // If the user is already logged in, redirect to the dashboard
+  useEffect(() => {
+    async function checkUser() {
+      const user = await getCurrentUser()
+      if (user) {
+        router.push('/dashboard')
+      }
+    }
+    checkUser()
+  }, [router])
+
   const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setLoading(true)
-
-  try {
-    await login(email, password)
-    toast.success('Logged in successfully!')
-    
-    // Redirect and force a hard refresh
-    router.push('/dashboard')
-    router.refresh() // Ensures fresh data loading
-    window.location.href = '/dashboard' // Forces a full page reload
-  } catch (error) {
-    toast.error('Failed to login. Please check your credentials.')
-  } finally {
-    setLoading(false)
+    e.preventDefault()
+    setLoading(true)
+    try {
+      await login(email, password)
+      toast.success('Logged in successfully!')
+      // Redirect and force a full page reload
+      router.push('/dashboard')
+      router.refresh() // Ensures fresh data loading
+      window.location.href = '/dashboard'
+    } catch (error) {
+      toast.error('Failed to login. Please check your credentials.')
+    } finally {
+      setLoading(false)
+    }
   }
-}
-
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

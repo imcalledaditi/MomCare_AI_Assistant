@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
-import { createAccount } from '@/lib/appwrite'
+import { createAccount, getCurrentUser} from '@/lib/appwrite'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -16,7 +16,15 @@ export default function Signup() {
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
-
+useEffect(() => {
+    async function checkUser() {
+      const user = await getCurrentUser()
+      if (user) {
+        router.push('/dashboard')
+      }
+    }
+    checkUser()
+  }, [router])
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value
     setPhone(input)
