@@ -66,9 +66,9 @@ node server.js
 ## 🤝 Contributing
 We love contributions! If you have ideas to improve MOMCARE, feel free to fork the repo, make changes, and submit a pull request. Let's make pregnancy healthier and safer together! 💙👶
 
-##👥 Contributors
-Sahil Adhikari (RA2211027010002)
-Aditya Verma (RA2211027010019)
-Aditi Roy (RA2211027010051)
+## 👥 Contributors
+Sahil Adhikari 
+Aditya Verma 
+Aditi Roy 
 
 Stay healthy, stay informed, and enjoy your pregnancy journey with MOMCARE! 💖👩‍⚕️🤰
