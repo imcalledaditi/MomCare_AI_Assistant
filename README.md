@@ -2,7 +2,7 @@
 
 MOMCARE is an AI-driven chatbot designed to support pregnant women with **personalized health guidance, emotional well-being tips, and nutritional advice**. Leveraging advanced AI, MOMCARE ensures that expectant mothers receive **accurate and timely information** for a safe and comfortable pregnancy journey.
 
-![Alt Text](https://github.com/imcalledaditi/Food-Adulteration-Detection/blob/944b42c7c6938d5a4c98bec8e6d5949b7324737d/img.jpg)
+![Alt Text](mom.jpg)
 
 ## 📌 About
 MOMCARE is more than just an assistant—it's a **trusted companion** for every stage of pregnancy. Whether you're looking for expert health tips, mindfulness exercises, or help with appointment reminders, our AI-powered platform is here to **support you every step of the way**.
