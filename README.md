@@ -58,10 +58,10 @@ node server.js
 
 ## 🎯 Roadmap
 🚀 Future enhancements we plan to introduce:
--🔍 Advanced AI Diagnostics – More accurate health predictions.
--🍽 Personalized Nutrition Plans – AI-driven meal recommendations.
--🌎 Global Language Expansion – More multilingual support.
--⌚ Wearable Device Compatibility – Enhanced tracking and analytics.
+- 🔍 Advanced AI Diagnostics – More accurate health predictions.
+- 🍽 Personalized Nutrition Plans – AI-driven meal recommendations.
+- 🌎 Global Language Expansion – More multilingual support.
+- ⌚ Wearable Device Compatibility – Enhanced tracking and analytics.
 
 ## 🤝 Contributing
 We love contributions! If you have ideas to improve MOMCARE, feel free to fork the repo, make changes, and submit a pull request. Let's make pregnancy healthier and safer together! 💙👶
