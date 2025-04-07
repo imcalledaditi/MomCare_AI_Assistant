@@ -23,6 +23,17 @@ MOMCARE is more than just an assistant—it's a **trusted companion** for every 
 - 🚨 **Emergency Assistance** – Quick access to emergency healthcare services.  
 
 ---
+## 📊 Dashboard Highlights
+- We believe your dashboard should be your pregnancy command center. Here are the essential features you’ll find on the MOMCARE dashboard:
+- Current Week of Pregnancy – Stay aware of your pregnancy progress.
+- Doctor Appointment Tracker – View and manage doctor visits for this week/month.
+- Class Schedule (Yoga & Wellness) – Know about upcoming wellness or prenatal yoga sessions.
+- BP Chart – Monitor your blood pressure over time.
+- Sugar Chart – Keep track of blood sugar levels.
+- Weight Chart – Watch your healthy weight gain through the weeks.
+- Medicine Reminders – Never miss a dose with built-in alerts.
+- Profile Overview – Access all personal pregnancy data in one place.
+---
 
 ## 🛠️ Tech Stack
 
@@ -39,16 +50,7 @@ MOMCARE is more than just an assistant—it's a **trusted companion** for every 
 
 Want to contribute or explore the project? Follow these steps:
 
-## 📊 Dashboard Highlights
-- We believe your dashboard should be your pregnancy command center. Here are the essential features you’ll find on the MOMCARE dashboard:
-- Current Week of Pregnancy – Stay aware of your pregnancy progress.
-- Doctor Appointment Tracker – View and manage doctor visits for this week/month.
-- Class Schedule (Yoga & Wellness) – Know about upcoming wellness or prenatal yoga sessions.
-- BP Chart – Monitor your blood pressure over time.
-- Sugar Chart – Keep track of blood sugar levels.
-- Weight Chart – Watch your healthy weight gain through the weeks.
-- Medicine Reminders – Never miss a dose with built-in alerts.
-- Profile Overview – Access all personal pregnancy data in one place.
+
 
 ### Clone the repository:
 ```sh
